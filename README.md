@@ -183,12 +183,17 @@ Checks that the library's required credit elements are still present. The librar
 
 This project is licensed under the Apache License 2.0.
 
-If you redistribute this library or modified versions, keep the LICENSE file and retain the required copyright and license notices in the source, documentation, and distributed copies. Mark modified files as changed when distributing modified versions.
+If you redistribute this library or modified versions, keep the LICENSE file and retain the required copyright and license notices in the source, documentation, and distributed copies. Mark modified files clearly and state that changes were made.
 
-You may modify and redistribute the project in accordance with the Apache License 2.0. Project attribution or credit checks are not additional license restrictions and do not override the rights granted by the Apache License.
+You may modify and redistribute the project in accordance with the Apache License 2.0. Project attribution or credit checks are not additional license restrictions and do not override the rights granted by the license.
 
 ## Known Issues
-Credits.UICreator identifies the library author and is used by the built in credit check. It must be the exact string "AntiByfron" the credit check will warn if it's missing or changed This can be updated by you to be removed or a different name.
+
+- `Credits.UICreator` must be exactly `"AntiByfron"`. The library checks this on startup and can warn or disable features if it is missing or changed.
+- `SettingsWindowSelectable` only works when a valid `SettingsWindowActivateKey` is set. Without a valid key, the shortcut will not activate.
+- This library is designed for a client-side Roblox context, such as a `LocalScript`, and requires `Players.LocalPlayer` to exist when creating the UI.
+- Invalid values such as bad `Color3` inputs, malformed `UDim2` values, or broken asset IDs can cause UI elements to appear incorrect or not render as expected.
+- Callbacks run asynchronously with `task.spawn`, so code that depends on immediate synchronous execution should rely on the callback result or `Get()` rather than assuming a blocking order.
 
 ## License
 
