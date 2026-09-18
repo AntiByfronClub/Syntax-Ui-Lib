@@ -1,5 +1,5 @@
 -- Example script for Syntax UI Lib
--- Put this LocalScript next to Main.luau, or change the require path if needed.
+-- This local script would be ran in an executor enviroment into roblox. We dont condone cheating we are a UILIB but for an example this is what i made.
 local SyntaxHub = require(script.Parent.Main)
 
 local hub = SyntaxHub.new({
