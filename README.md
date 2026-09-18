@@ -187,7 +187,7 @@ If you redistribute this library or modified versions, keep the LICENSE file and
 
 You may modify and redistribute the project in accordance with the Apache License 2.0. Project attribution or credit checks are not additional license restrictions and do not override the rights granted by the license.
 
-## Ownership Requirement
+## Ownership Requirement / Known Bugs
 
 - `Credits.UICreator` must be exactly `"AntiByfron"`. If it is missing or changed, `SyntaxHub.new` immediately raises an error and the hub is not created; it does not merely warn.
 - Keep the built-in credit elements, including the `_credit_watermark` and `_credit_bar` instances. If they are removed or cannot be found, the library raises an error when `CheckCredits()` runs.
