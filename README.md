@@ -187,6 +187,9 @@ If you redistribute this library or modified versions, keep the LICENSE file and
 
 You may modify and redistribute the project in accordance with the Apache License 2.0. Project attribution or credit checks are not additional license restrictions and do not override the rights granted by the Apache License.
 
+## Known Issues
+Credits.UICreator identifies the library author and is used by the built in credit check. It must be the exact string "AntiByfron" the credit check will warn if it's missing or changed This can be updated by you to be removed or a different name.
+
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
