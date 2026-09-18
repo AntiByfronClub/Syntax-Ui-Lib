@@ -1,35 +1,28 @@
 # Syntax UI Lib
 
-A lightweight Roblox **Luau** UI library for creating a customizable, Forsaken-inspired hub with animated tabs, toggle buttons, sliders, loading messages, popups, and an optional settings window.
+A small Roblox Luau UI library for building customizable hubs with tabs, toggles, sliders, popups, loading messages, and an optional settings window.
 
-> **Status:** Early development. The public API may change as the library is expanded.
+> Early development — the API may change.
 
 ## Features
 
-- Dark, green-accented UI with tweened opening and closing animations
-- Custom hub name, icon, accent color, size, position, and background
+- Dark UI with green accents and opening/closing animations
+- Custom hub name, icon, colors, size, position, and background
 - Draggable hub and settings windows
-- Tab/window support
-- Toggle buttons with callbacks and `Set`/`Get` controls
-- Sliders with min/max values, step snapping, callbacks, and `Set`/`Get` controls
-- Custom loading sequences shown the first time the hub is opened
-- Toast-style popup notifications
-- Optional keyboard settings-window toggle
-- Scrolling content areas for larger interfaces
+- Tabs and scrolling content areas
+- Toggle buttons and sliders with callbacks, `Set`, and `Get`
+- Loading messages and popup notifications
+- Optional keyboard shortcut for the settings window
 
 ## Installation
 
-Require the module from wherever you store it in your Roblox experience:
+Require the module from your Roblox experience:
 
 ```lua
 local SyntaxHub = require(path.to.Main)
 ```
 
-If you are loading the file from a remote source, use the loader supported by your environment and make sure the returned value is the module table.
-
 ## Quick start
-
-`Credits.UICreator` is required and must be exactly `"AntiByfron"`.
 
 ```lua
 local SyntaxHub = require(path.to.Main)
@@ -54,17 +47,17 @@ end)
 hub:CreatePopup("Ready", "The hub has loaded.")
 ```
 
-The hub is opened and closed using the small button on the left side of the screen.
+The hub opens from the small button on the left side of the screen.
 
 ## Configuration
 
-All configuration values are optional except `Credits.UICreator`.
+All values are optional except `Credits.UICreator`, which must be exactly `"AntiByfron"`.
 
 ```lua
 local hub = SyntaxHub.new({
     Credits = {
-        UICreator = "AntiByfron", -- required; exact spelling and capitalization
-        FeaturesMadeBy = "YourName", -- optional; defaults to "N/A"
+        UICreator = "AntiByfron",
+        FeaturesMadeBy = "YourName",
     },
 
     CustomizeOpenLogo = {
@@ -88,38 +81,30 @@ local hub = SyntaxHub.new({
 })
 ```
 
-### Configuration reference
-
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `Credits.UICreator` | string | required | Must be exactly `AntiByfron`. The library displays this credit and validates it when creating or using UI elements. |
-| `Credits.FeaturesMadeBy` | string | `"N/A"` | Name displayed in the hub credit line. |
-| `CustomizeOpenLogo.Name` | string | `"Syntax Hub"` | Hub name shown on the launcher, title bar, and settings title. |
-| `CustomizeOpenLogo.Image` | string | built-in asset | Roblox image asset ID used by the launcher and title bar. |
-| `CustomizeOpenLogo.R/G/B` | number | `0, 170, 127` | RGB values for the accent color. |
+| `Credits.UICreator` | string | required | Must be `AntiByfron`. |
+| `Credits.FeaturesMadeBy` | string | `"N/A"` | Name shown in the hub credit line. |
+| `CustomizeOpenLogo.Name` | string | `"Syntax Hub"` | Name shown on the launcher and title bar. |
+| `CustomizeOpenLogo.Image` | string | built-in asset | Image asset used by the launcher and title bar. |
+| `CustomizeOpenLogo.R/G/B` | number | `0, 170, 127` | Accent color values. |
 | `CustomizeMainHubFrame.Size` | `UDim2` | `UDim2.fromOffset(480, 400)` | Hub and settings-window size. |
 | `CustomizeMainHubFrame.Position` | `UDim2` | `UDim2.fromScale(0.5, 0.5)` | Hub and settings-window position. |
 | `CustomizeMainHubFrame.BackgroundColor` | `Color3` | dark green | Hub and settings background color. |
-| `CustomizeMainHubFrame.BackgroundTransparency` | number | `0` | Hub and settings background transparency. |
+| `CustomizeMainHubFrame.BackgroundTransparency` | number | `0` | Background transparency. |
 | `MakeDraggable` | boolean | `true` | Allows dragging from the title bars. |
-| `SettingsWindowSelectable` | boolean | `false` | Enables the keyboard-controlled settings window. |
-| `SettingsWindowActivateKey` | string | none | A valid `Enum.KeyCode` name, such as `"RightShift"`, used with `SettingsWindowSelectable`. |
+| `SettingsWindowSelectable` | boolean | `false` | Enables the keyboard settings shortcut. |
+| `SettingsWindowActivateKey` | string | none | KeyCode name used for the settings shortcut. |
 
 ## API
 
 ### `SyntaxHub.new(config)`
 
-Creates and returns a hub object.
-
-```lua
-local hub = SyntaxHub.new(config)
-```
-
-If `Credits.UICreator` is missing or is not exactly `"AntiByfron"`, construction stops with an error.
+Creates a hub. `Credits.UICreator` must be set to `"AntiByfron"`.
 
 ### `hub:CreateWindow(title)`
 
-Creates a tab and returns a window object. The first created window is selected automatically.
+Creates a tab and returns its window object. The first window is selected automatically.
 
 ```lua
 local combat = hub:CreateWindow("Combat")
@@ -128,75 +113,44 @@ local visuals = hub:CreateWindow("Visuals")
 
 ### `window:CreateButton(title, description, callback)`
 
-Creates a toggle row. The callback receives the new boolean state whenever the user clicks the row or the returned control is set.
+Creates a toggle and returns a control with `Set(state)` and `Get()` methods. The initial state is `false`.
 
 ```lua
-local enabled = combat:CreateButton(
-    "Aimbot",
-    "Enable the combat feature",
-    function(state)
-        print(state and "Enabled" or "Disabled")
-    end
-)
+local enabled = combat:CreateButton("Aimbot", "Enable the combat feature", function(state)
+    print(state and "Enabled" or "Disabled")
+end)
 
 enabled:Set(true)
 print(enabled:Get())
 ```
 
-Returns a control with:
-
-- `control:Set(state)` — sets the toggle state and invokes the callback.
-- `control:Get()` — returns the current boolean state.
-
-The initial state is `false`.
-
 ### `window:CreateSlider(title, description, min, max, step, default, callback)`
 
-Creates a slider. Values are clamped to the supplied range and rounded to the supplied step.
+Creates a slider. Values are clamped to the range and rounded to the selected step. It returns a control with `Set(value)` and `Get()` methods.
 
 ```lua
-local volume = visuals:CreateSlider(
-    "Volume",
-    "Adjust the interface volume",
-    0,
-    100,
-    5,
-    50,
-    function(value)
-        print("Volume:", value)
-    end
-)
+local volume = visuals:CreateSlider("Volume", "Adjust the interface volume", 0, 100, 5, 50, function(value)
+    print("Volume:", value)
+end)
 
 volume:Set(75)
 print(volume:Get())
 ```
 
-Returns a control with:
-
-- `control:Set(value)` — clamps/snaps the value and invokes the callback.
-- `control:Get()` — returns the current numeric value.
-
-Defaults are `min = 0`, `max = 100`, and `step = 1`. The default value is clamped to the range.
+Defaults are `min = 0`, `max = 100`, and `step = 1`.
 
 ### `hub:CreateLoadingMessage(text, sub, duration, color)`
 
-Adds a message to the loading sequence. The sequence is displayed the first time the launcher opens the hub, in the order messages were added.
-
-- `text` — main message text; defaults to `"Loading..."`.
-- `sub` — secondary text; defaults to an empty string.
-- `duration` — display time in seconds; defaults to `0.85`.
-- `color` — main message `Color3`; defaults to a light green/white color.
+Adds a message to the first-open loading sequence. Add messages before opening the hub.
 
 ```lua
 hub:CreateLoadingMessage("Starting", "Preparing the interface", 0.8)
 hub:CreateLoadingMessage("Almost ready", "Loading features", 0.8, Color3.fromRGB(120, 255, 190))
 ```
 
-Add loading messages before the first open so they are included in the initial sequence.
-
 ### `hub:CustomizeLoadingMessage(index, props)`
 
-Edits an existing loading message by its one-based index. Unknown indexes are ignored.
+Updates a loading message by its one-based index. Supported properties are `text`, `sub`, `duration`, and `color`.
 
 ```lua
 hub:CustomizeLoadingMessage(1, {
@@ -207,11 +161,9 @@ hub:CustomizeLoadingMessage(1, {
 })
 ```
 
-Supported properties are `text`, `sub`, `duration`, and `color`.
-
 ### `hub:CreatePopup(title, body)`
 
-Creates a toast-style popup notification in the lower-right corner of the screen.
+Shows a toast notification in the lower-right corner.
 
 ```lua
 hub:CreatePopup("Saved", "Your settings were saved.")
@@ -219,17 +171,22 @@ hub:CreatePopup("Saved", "Your settings were saved.")
 
 ### `hub:CheckCredits()`
 
-Validates that the required credit watermark and credit bar still exist. It is normally called internally by the library. It raises an error if either required credit element cannot be found.
+Checks that the library's required credit elements are still present. The library normally calls this itself.
 
-## Important notes
+## Notes
 
-- This library is client-side UI code and expects to run in a `LocalScript` or another client context where `Players.LocalPlayer` is available.
-- The module creates its `ScreenGui` inside the local player's `PlayerGui`.
-- `SettingsWindowSelectable` must be enabled and `SettingsWindowActivateKey` must be a valid key name for the settings shortcut to work.
-- Callbacks are run asynchronously with `task.spawn`.
-- The library uses Roblox `Color3`, `UDim2`, and asset ID strings, so those values must be valid for the experience.
-- Do not remove the generated credit watermark or credit bar; the library checks for them before creating and interacting with UI components.
+- Run the library from a `LocalScript` or another client context where `Players.LocalPlayer` is available.
+- The `ScreenGui` is created inside the local player's `PlayerGui`.
+- `SettingsWindowSelectable` and a valid `SettingsWindowActivateKey` are required for the settings shortcut.
+- Callbacks run asynchronously with `task.spawn`.
+- `Color3`, `UDim2`, and Roblox asset IDs must be valid.
+
+## Using or modifying this project
+
+You can use the library in your own projects. If you want to make changes, ask first or fork the repository.
+
+You do not need to add a separate credit section to your project, but keep the license and any required notices when redistributing the library.
 
 ## License
 
-Go to LICENSE.MD
+This project is licensed under the [Apache License 2.0](LICENSE).
