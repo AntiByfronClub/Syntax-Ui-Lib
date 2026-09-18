@@ -181,6 +181,29 @@ Checks that the library's required credit elements are still present. The librar
 - Callbacks run asynchronously with `task.spawn`.
 - `Color3`, `UDim2`, and Roblox asset IDs must be valid.
 
+## Changelog
+
+### Version 1.1.0
+
+- Added customizable hub branding with launch logo name, image, and accent color settings.
+- Added draggable main hub and settings windows.
+- Added settings window keyboard activation support.
+- Added tab-based layout and scrollable content windows.
+- Added toggle and slider controls with `Set`, `Get`, and callback support.
+- Added loading sequence messages and popup notifications.
+- Expanded the project documentation and configuration examples.
+
+### Version 1.0.0
+
+- Initial release of Syntax UI Lib.
+- Added the dark green UI theme, hub creation flow, and core window controls.
+
+## Credit Removal
+
+If you need a version without the required credit check, see [CreditRemoval.md](CreditRemoval.md).
+
+The credit requirement is only removable through the approved process described in that file. Do not bypass or remove it from a downloaded copy without permission.
+
 ## Using or modifying this project
 
 You can use the library in your own projects. If you want to make changes, ask first or fork the repository.
@@ -190,3 +213,5 @@ You do not need to add a separate credit section to your project, but keep the l
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
+
+See the [LICENSE](LICENSE) file for the full legal text.
