@@ -50,28 +50,11 @@ end
 local SyntaxHub   = {}
 SyntaxHub.__index = SyntaxHub
 
-function SyntaxHub:CheckCredits()
-	local wm = self._tabBar:FindFirstChild("_credit_watermark")
-	local cb = self._hubFrame:FindFirstChild("_credit_bar")
-	if not wm or not cb then
-		error("[SyntaxHub] Failed To Find Requirement Credit", 0)
-	end
-end
-
 function SyntaxHub.new(config)
 	config = config or {}
 	local credits      = config.Credits or {}
-	local uiCreator    = tostring(credits.UICreator or "")
 	local featureMaker = tostring(credits.FeaturesMadeBy or "N/A")
-
-	if uiCreator ~= "AntiByfron" then
-		error(
-			"\n[SyntaxHub] Credits.UICreator must be \"AntiByfron\".\n"
-			.. "Got: \"" .. uiCreator .. "\"\n"
-			.. "Set Credits = { UICreator = \"AntiByfron\", FeaturesMadeBy = \"YourName\" }",
-			0
-		)
-	end
+	local uiCreator    = tostring(credits.UICreator or "")
 
 	local creditLine = "UI by " .. uiCreator .. "  |  Features by " .. featureMaker
 
@@ -92,7 +75,7 @@ function SyntaxHub.new(config)
 	local activateKeyName    = config.SettingsWindowActivateKey or nil
 
 	local ScreenGui = NewInstance("ScreenGui", {
-		Name           = "SyntaxHub[" .. uiCreator .. "]_" .. hubName,
+		Name           = "SyntaxHub_" .. hubName,
 		ResetOnSpawn   = false,
 		DisplayOrder   = 9998,
 		IgnoreGuiInset = true,
@@ -230,21 +213,6 @@ function SyntaxHub.new(config)
 	TabBarList.VerticalAlignment   = Enum.VerticalAlignment.Center
 	Padding(8, 8, 0, 0, TabBar)
 
-	local WatermarkBtn = NewInstance("TextButton", {
-		Name                   = "_credit_watermark",
-		AnchorPoint            = Vector2.new(1, 0.5),
-		Position               = UDim2.new(1, -6, 0.5, 0),
-		Size                   = UDim2.fromOffset(0, 18),
-		AutomaticSize          = Enum.AutomaticSize.X,
-		BackgroundTransparency = 1,
-		Font                   = Enum.Font.Gotham,
-		Text                   = uiCreator .. "  ",
-		TextColor3             = Color3.fromRGB(0, 60, 45),
-		TextSize               = 10,
-		ZIndex                 = 24,
-	}, TabBar)
-	WatermarkBtn.MouseButton1Click:Connect(function() end)
-
 	local ContentScroll = NewInstance("ScrollingFrame", {
 		Name                   = "Contents",
 		Position               = UDim2.new(0, 0, 0, 68),
@@ -260,7 +228,7 @@ function SyntaxHub.new(config)
 	ListLayout(ContentScroll, 6)
 	Padding(10, 10, 6, 6, ContentScroll)
 
-	local CreditBar = NewInstance("TextLabel", {
+	NewInstance("TextLabel", {
 		Name                   = "_credit_bar",
 		AnchorPoint            = Vector2.new(0.5, 1),
 		Position               = UDim2.new(0.5, 0, 1, -4),
@@ -472,7 +440,6 @@ function SyntaxHub.new(config)
 	end
 
 	local function OpenHub()
-		self:CheckCredits()
 		self._hubOpen    = true
 		HubFrame.Visible = true
 		HubFrame.Position = UDim2.new(
@@ -629,7 +596,6 @@ function SyntaxHub:CustomizeLoadingMessage(index, props)
 end
 
 function SyntaxHub:CreateWindow(title)
-	self:CheckCredits()
 	title = tostring(title or "Window")
 
 	local TabBtn = NewInstance("TextButton", {
@@ -693,7 +659,6 @@ function SyntaxHub:CreateWindow(title)
 	end)
 
 	function window:CreateButton(btnTitle, btnDesc, callback)
-		self._hub:CheckCredits()
 		self._layoutOrder += 1
 		local accent = self._hub._accentColor
 
@@ -800,7 +765,6 @@ function SyntaxHub:CreateWindow(title)
 	end
 
 	function window:CreateSlider(slTitle, slDesc, minVal, maxVal, step, default, callback)
-		self._hub:CheckCredits()
 		self._layoutOrder += 1
 		local accent = self._hub._accentColor
 		minVal  = minVal  or 0
@@ -958,7 +922,6 @@ function SyntaxHub:CreateWindow(title)
 end
 
 function SyntaxHub:CreatePopup(popTitle, popBody)
-	self:CheckCredits()
 	local accent    = self._accentColor
 	local signature = self._uiCreator
 
