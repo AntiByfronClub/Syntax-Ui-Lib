@@ -43,8 +43,6 @@ end)
 main:CreateSlider("Walk speed", "Choose a value from 16 to 100", 16, 100, 1, 16, function(value)
     print("Walk speed:", value)
 end)
-
-hub:CreatePopup("Ready", "The hub has loaded.")
 ```
 
 The hub opens from the small button on the left side of the screen.
@@ -98,11 +96,11 @@ local hub = SyntaxHub.new({
 
 ## API
 
-### `SyntaxHub.new(config)`
+## `SyntaxHub.new(config)`
 
 Creates a hub. `Credits.UICreator` must be set to `"AntiByfron"`.
 
-### `hub:CreateWindow(title)`
+## `hub:CreateWindow(title)`
 
 Creates a tab and returns its window object. The first window is selected automatically.
 
@@ -111,7 +109,7 @@ local combat = hub:CreateWindow("Combat")
 local visuals = hub:CreateWindow("Visuals")
 ```
 
-### `window:CreateButton(title, description, callback)`
+## `window:CreateButton(title, description, callback)`
 
 Creates a toggle and returns a control with `Set(state)` and `Get()` methods. The initial state is `false`.
 
@@ -124,7 +122,7 @@ enabled:Set(true)
 print(enabled:Get())
 ```
 
-### `window:CreateSlider(title, description, min, max, step, default, callback)`
+## `window:CreateSlider(title, description, min, max, step, default, callback)`
 
 Creates a slider. Values are clamped to the range and rounded to the selected step. It returns a control with `Set(value)` and `Get()` methods.
 
@@ -139,7 +137,7 @@ print(volume:Get())
 
 Defaults are `min = 0`, `max = 100`, and `step = 1`.
 
-### `hub:CreateLoadingMessage(text, sub, duration, color)`
+## `hub:CreateLoadingMessage(text, sub, duration, color)`
 
 Adds a message to the first-open loading sequence. Add messages before opening the hub.
 
@@ -148,7 +146,7 @@ hub:CreateLoadingMessage("Starting", "Preparing the interface", 0.8)
 hub:CreateLoadingMessage("Almost ready", "Loading features", 0.8, Color3.fromRGB(120, 255, 190))
 ```
 
-### `hub:CustomizeLoadingMessage(index, props)`
+## `hub:CustomizeLoadingMessage(index, props)`
 
 Updates a loading message by its one-based index. Supported properties are `text`, `sub`, `duration`, and `color`.
 
@@ -161,7 +159,7 @@ hub:CustomizeLoadingMessage(1, {
 })
 ```
 
-### `hub:CreatePopup(title, body)`
+## `hub:CreatePopup(title, body)`
 
 Shows a toast notification in the lower-right corner.
 
@@ -169,7 +167,7 @@ Shows a toast notification in the lower-right corner.
 hub:CreatePopup("Saved", "Your settings were saved.")
 ```
 
-### `hub:CheckCredits()`
+## `hub:CheckCredits()`
 
 Checks that the library's required credit elements are still present. The library normally calls this itself.
 
@@ -194,11 +192,6 @@ and any required notices.
 The library ships with a soft credit check that verifies the credit
 labels are still present. It exists to discourage lazy re-uploads, not
 to stop real forks.
-
-## CreditRemoval
-
-If you need a version without the required credit check, see
-[CreditRemoval.md](./CreditRemoval.md).
 
 ## License
 
