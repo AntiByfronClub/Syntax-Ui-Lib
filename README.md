@@ -1,5 +1,10 @@
 # Syntax UI Lib
 
+
+<img width="2172" height="724" alt="SyntaxLogo" src="https://github.com/user-attachments/assets/f88ad308-b8c4-46d8-8214-ac4f8159f7ff" />
+
+
+
 A lightweight Roblox Luau library for making custom hubs with tabs, toggles, sliders, popups, loading messages, and an optional settings window.
 
 It is built for quick UI setup and easy customization without making the code harder to work with.
@@ -15,6 +20,7 @@ It is built for quick UI setup and easy customization without making the code ha
 - Optional keyboard shortcut for the settings window
 
 ## Installation
+
 
 Require the module from your Roblox experience:
 
