@@ -195,6 +195,11 @@ The library ships with a soft credit check that verifies the credit
 labels are still present. It exists to discourage lazy re-uploads, not
 to stop real forks.
 
+## CreditRemoval
+
+If you need a version without the required credit check, see
+[CreditRemoval.md](./CreditRemoval.md).
+
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
