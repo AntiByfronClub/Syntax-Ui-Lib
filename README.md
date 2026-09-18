@@ -1,7 +1,7 @@
 # Syntax UI Lib
 
 
-<img width="2172" height="724" alt="SyntaxLogo" src="https://github.com/user-attachments/assets/f88ad308-b8c4-46d8-8214-ac4f8159f7ff" />
+<img width="800" height="600" alt="image (6)" src="https://github.com/user-attachments/assets/5beb5c14-059e-43b9-bbcf-cd40f515a282" />
 
 
 
