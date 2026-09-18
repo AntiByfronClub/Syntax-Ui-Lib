@@ -232,4 +232,4 @@ Validates that the required credit watermark and credit bar still exist. It is n
 
 ## License
 
-No license is currently specified in this repository. Add a `LICENSE` file if you want others to use, modify, or redistribute the library under defined terms.
+Go to LICENSE.MD
