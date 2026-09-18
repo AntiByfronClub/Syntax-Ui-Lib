@@ -29,7 +29,7 @@ local SyntaxHub = require(path.to.Main)
 
 local hub = SyntaxHub.new({
     Credits = {
-        UICreator = "AntiByfron",
+        UICreator = "YourName",
         FeaturesMadeBy = "YourName",
     },
 })
@@ -49,12 +49,12 @@ The hub opens from the small button on the left side of the screen.
 
 ## Configuration
 
-All values are optional except `Credits.UICreator`, which must be exactly `"AntiByfron"`.
+All values are optional. The `Credits` table is used only for displayed attribution text.
 
 ```lua
 local hub = SyntaxHub.new({
     Credits = {
-        UICreator = "AntiByfron",
+        UICreator = "YourName",
         FeaturesMadeBy = "YourName",
     },
 
@@ -81,7 +81,7 @@ local hub = SyntaxHub.new({
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `Credits.UICreator` | string | required | Must be `AntiByfron`. |
+| `Credits.UICreator` | string | `"N/A"` | Name displayed as the UI creator. |
 | `Credits.FeaturesMadeBy` | string | `"N/A"` | Name shown in the hub credit line. |
 | `CustomizeOpenLogo.Name` | string | `"Syntax Hub"` | Name shown on the launcher and title bar. |
 | `CustomizeOpenLogo.Image` | string | built-in asset | Image asset used by the launcher and title bar. |
@@ -98,7 +98,7 @@ local hub = SyntaxHub.new({
 
 ## `SyntaxHub.new(config)`
 
-Creates a hub. `Credits.UICreator` must be set to `"AntiByfron"`.
+Creates a hub. The optional `Credits` table controls the attribution text shown in the UI.
 
 ## `hub:CreateWindow(title)`
 
@@ -167,10 +167,6 @@ Shows a toast notification in the lower-right corner.
 hub:CreatePopup("Saved", "Your settings were saved.")
 ```
 
-## `hub:CheckCredits()`
-
-Checks that the library's required credit elements are still present. The library normally calls this itself.
-
 ## Notes
 
 - Run the library from a `LocalScript` or another client context where `Players.LocalPlayer` is available.
@@ -178,6 +174,7 @@ Checks that the library's required credit elements are still present. The librar
 - `SettingsWindowSelectable` and a valid `SettingsWindowActivateKey` are required for the settings shortcut.
 - Callbacks run asynchronously with `task.spawn`.
 - `Color3`, `UDim2`, and Roblox asset IDs must be valid.
+- The library does not enforce a creator or ownership requirement.
 
 ## Using and redistributing this project
 
@@ -185,17 +182,7 @@ This project is licensed under the Apache License 2.0.
 
 If you redistribute this library or modified versions, keep the LICENSE file and retain the required copyright and license notices in the source, documentation, and distributed copies. Mark modified files clearly and state that changes were made.
 
-You may modify and redistribute the project in accordance with the Apache License 2.0. Project attribution or credit checks are not additional license restrictions and do not override the rights granted by the license.
-
-## Ownership Requirement / Known Bugs
-
-- `Credits.UICreator` must be exactly `"AntiByfron"`. If it is missing or changed, `SyntaxHub.new` immediately raises an error and the hub is not created; it does not merely warn.
-- Keep the built-in credit elements, including the `_credit_watermark` and `_credit_bar` instances. If they are removed or cannot be found, the library raises an error when `CheckCredits()` runs.
-- If you redistribute this library or a modified version, retain the LICENSE file and the required copyright, license, and attribution notices. Clearly mark modified files and state that changes were made.
-- `SettingsWindowSelectable` only works when a valid `SettingsWindowActivateKey` is set. Without a valid key, the shortcut will not activate.
-- This library is designed for a client-side Roblox context, such as a `LocalScript`, and requires `Players.LocalPlayer` to exist when creating the UI.
-- Invalid values such as bad `Color3` inputs, malformed `UDim2` values, or broken asset IDs can cause UI elements to appear incorrect or not render as expected.
-- Callbacks run asynchronously with `task.spawn`, so code that depends on immediate synchronous execution should rely on the callback result or `Get()` rather than assuming a blocking order.
+You may modify and redistribute the project in accordance with the Apache License 2.0.
 
 ## License
 
