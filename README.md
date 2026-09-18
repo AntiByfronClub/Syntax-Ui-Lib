@@ -179,19 +179,13 @@ Checks that the library's required credit elements are still present. The librar
 - Callbacks run asynchronously with `task.spawn`.
 - `Color3`, `UDim2`, and Roblox asset IDs must be valid.
 
-## Using or modifying this project
+## Using and redistributing this project
 
-You're free to use Syntax UI in any project, personal or commercial.
+This project is licensed under the Apache License 2.0.
 
-If you want to fork it, restyle it, or strip the credit watermark, see
-[CreditRemoval.md](./CreditRemoval.md).
+If you redistribute this library or modified versions, keep the LICENSE file and retain the required copyright and license notices in the source, documentation, and distributed copies. Mark modified files as changed when distributing modified versions.
 
-If you redistribute the library (forked or not), keep the LICENSE file
-and any required notices.
-
-The library ships with a soft credit check that verifies the credit
-labels are still present. It exists to discourage lazy re-uploads, not
-to stop real forks.
+You may modify and redistribute the project in accordance with the Apache License 2.0. Project attribution or credit checks are not additional license restrictions and do not override the rights granted by the Apache License.
 
 ## License
 
