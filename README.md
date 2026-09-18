@@ -187,12 +187,6 @@ If you need a version without the required credit check, see [CreditRemoval.md](
 
 The credit requirement is only removable through the approved process described in that file. Do not bypass or remove it from a downloaded copy without permission.
 
-## Using or modifying this project
-
-You can use the library in your own projects. If you want to make changes, ask first or fork the repository.
-
-You do not need to add a separate credit section to your project, but keep the license and any required notices when redistributing the library.
-
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
