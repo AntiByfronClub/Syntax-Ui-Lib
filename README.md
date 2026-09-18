@@ -187,9 +187,11 @@ If you redistribute this library or modified versions, keep the LICENSE file and
 
 You may modify and redistribute the project in accordance with the Apache License 2.0. Project attribution or credit checks are not additional license restrictions and do not override the rights granted by the license.
 
-## Known Issues
+## Ownership Requirement
 
-- `Credits.UICreator` must be exactly `"AntiByfron"`. The library checks this on startup and can warn or disable features if it is missing or changed.
+- `Credits.UICreator` must be exactly `"AntiByfron"`. If it is missing or changed, `SyntaxHub.new` immediately raises an error and the hub is not created; it does not merely warn.
+- Keep the built-in credit elements, including the `_credit_watermark` and `_credit_bar` instances. If they are removed or cannot be found, the library raises an error when `CheckCredits()` runs.
+- If you redistribute this library or a modified version, retain the LICENSE file and the required copyright, license, and attribution notices. Clearly mark modified files and state that changes were made.
 - `SettingsWindowSelectable` only works when a valid `SettingsWindowActivateKey` is set. Without a valid key, the shortcut will not activate.
 - This library is designed for a client-side Roblox context, such as a `LocalScript`, and requires `Players.LocalPlayer` to exist when creating the UI.
 - Invalid values such as bad `Color3` inputs, malformed `UDim2` values, or broken asset IDs can cause UI elements to appear incorrect or not render as expected.
