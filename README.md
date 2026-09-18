@@ -1,6 +1,6 @@
 # Syntax UI Lib
 
-A small Roblox Luau library for making custom hubs with tabs, toggles, sliders, popups, loading messages, and an optional settings window.
+A lightweight Roblox Luau library for making custom hubs with tabs, toggles, sliders, popups, loading messages, and an optional settings window.
 
 It is built for quick UI setup and easy customization without making the code harder to work with.
 
