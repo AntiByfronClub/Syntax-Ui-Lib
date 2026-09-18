@@ -1,5 +1,6 @@
--- Example script for Syntax UI Lib
--- This local script would be ran in an executor enviroment into roblox. We dont condone cheating we are a UILIB but for an example this is what i made.
+-- Example script for Syntax UI Lib.
+-- This example is written for an executor environment but Syntax itself
+-- is just a UI library and works in any LocalScript.
 local SyntaxHub = require(script.Parent.Main)
 
 local hub = SyntaxHub.new({
