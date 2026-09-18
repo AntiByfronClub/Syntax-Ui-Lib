@@ -181,11 +181,19 @@ Checks that the library's required credit elements are still present. The librar
 - Callbacks run asynchronously with `task.spawn`.
 - `Color3`, `UDim2`, and Roblox asset IDs must be valid.
 
-## Credit Removal
+## Using or modifying this project
 
-If you need a version without the required credit check, see [CreditRemoval.md](CreditRemoval.md).
+You're free to use Syntax UI in any project, personal or commercial.
 
-The credit requirement is only removable through the approved process described in that file. Do not bypass or remove it from a downloaded copy without permission.
+If you want to fork it, restyle it, or strip the credit watermark, see
+[CreditRemoval.md](./CreditRemoval.md).
+
+If you redistribute the library (forked or not), keep the LICENSE file
+and any required notices.
+
+The library ships with a soft credit check that verifies the credit
+labels are still present. It exists to discourage lazy re-uploads, not
+to stop real forks.
 
 ## License
 
