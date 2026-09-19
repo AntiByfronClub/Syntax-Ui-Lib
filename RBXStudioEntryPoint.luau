@@ -1,2 +1,3 @@
--- Canonical entry point for Studio and external environments.
-return require(script.Parent.Parent:WaitForChild("Main"))
+-- Roblox Studio entry point.
+-- This file is in the repository root, so the library is its sibling.
+return require(script.Parent:WaitForChild("Main"))
