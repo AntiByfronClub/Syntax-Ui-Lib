@@ -20,11 +20,16 @@ It is built for quick UI setup and easy customization without making the code ha
 
 ## Installation
 
-
-Require the module from your Roblox experience:
+Require the library from your Roblox experience. The root `Main` module remains available as a compatibility wrapper:
 
 ```lua
 local SyntaxHub = require(path.to.Main)
+```
+
+The source module can also be required directly:
+
+```lua
+local SyntaxHub = require(path.to.src.Main)
 ```
 
 ## Quick start
@@ -101,76 +106,37 @@ local hub = SyntaxHub.new({
 
 ## API
 
-## `SyntaxHub.new(config)`
+### `SyntaxHub.new(config)`
 
 Creates a hub. The optional `Credits` table controls the attribution text shown in the UI.
 
-## `hub:CreateWindow(title)`
+### `hub:CreateWindow(title)`
 
 Creates a tab and returns its window object. The first window is selected automatically.
 
-```lua
-local combat = hub:CreateWindow("Combat")
-local visuals = hub:CreateWindow("Visuals")
-```
+### `window:CreateButton(title, description, callback)`
 
-## `window:CreateButton(title, description, callback)`
+Creates a toggle and returns a control with `Set(state)` and `Get()` methods. The initial state is `false`. Calling `Set` invokes the callback.
 
-Creates a toggle and returns a control with `Set(state)` and `Get()` methods. The initial state is `false`.
+### `window:CreateSlider(title, description, min, max, step, default, callback)`
 
-```lua
-local enabled = combat:CreateButton("Aimbot", "Enable the combat feature", function(state)
-    print(state and "Enabled" or "Disabled")
-end)
+Creates a slider. Values are clamped to the range and rounded to the selected step. It returns a control with `Set(value)` and `Get()` methods. Defaults are `min = 0`, `max = 100`, and `step = 1`.
 
-enabled:Set(true)
-print(enabled:Get())
-```
-
-## `window:CreateSlider(title, description, min, max, step, default, callback)`
-
-Creates a slider. Values are clamped to the range and rounded to the selected step. It returns a control with `Set(value)` and `Get()` methods.
-
-```lua
-local volume = visuals:CreateSlider("Volume", "Adjust the interface volume", 0, 100, 5, 50, function(value)
-    print("Volume:", value)
-end)
-
-volume:Set(75)
-print(volume:Get())
-```
-
-Defaults are `min = 0`, `max = 100`, and `step = 1`.
-
-## `hub:CreateLoadingMessage(text, sub, duration, color)`
+### `hub:CreateLoadingMessage(text, sub, duration, color)`
 
 Adds a message to the first-open loading sequence. Add messages before opening the hub.
 
-```lua
-hub:CreateLoadingMessage("Starting", "Preparing the interface", 0.8)
-hub:CreateLoadingMessage("Almost ready", "Loading features", 0.8, Color3.fromRGB(120, 255, 190))
-```
-
-## `hub:CustomizeLoadingMessage(index, props)`
+### `hub:CustomizeLoadingMessage(index, props)`
 
 Updates a loading message by its one-based index. Supported properties are `text`, `sub`, `duration`, and `color`.
 
-```lua
-hub:CustomizeLoadingMessage(1, {
-    text = "Boot complete",
-    sub = "Welcome back",
-    duration = 1,
-    color = Color3.fromRGB(180, 255, 220),
-})
-```
-
-## `hub:CreatePopup(title, body)`
+### `hub:CreatePopup(title, body)`
 
 Shows a toast notification in the lower-right corner.
 
-```lua
-hub:CreatePopup("Saved", "Your settings were saved.")
-```
+### `hub:SettingsDeclared(theme)`
+
+Accepts a theme table containing `AccentColor`. This method is retained for compatibility, but currently only updates the stored accent color and does not fully recolor existing UI elements.
 
 ## Notes
 
@@ -181,16 +147,6 @@ hub:CreatePopup("Saved", "Your settings were saved.")
 - `Color3`, `UDim2`, and Roblox asset IDs must be valid.
 - The library does not enforce a creator or ownership requirement.
 
-## Using and redistributing this project
-
-This project is licensed under the Apache License 2.0.
-
-If you redistribute this library or modified versions, keep the LICENSE file and retain the required copyright and license notices in the source, documentation, and distributed copies. Mark modifications clearly and follow the Apache 2.0 requirements.
-
-You may modify and redistribute the project in accordance with the Apache License 2.0.
-
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
-
-See the [LICENSE](LICENSE) file for the full legal text.
