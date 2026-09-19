@@ -6,20 +6,18 @@ local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui   = LocalPlayer:WaitForChild("PlayerGui")
 
-local TOAST_HEIGHT = 68
-local TOAST_GAP    = 8
-local MAX_TOASTS   = 5
-
-local warnedDeprecated = false
-
 local function Tween(inst, t, props)
 	TweenService:Create(inst, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
 end
 
 local function NewInstance(class, props, parent)
 	local inst = Instance.new(class)
-	for k, v in pairs(props) do inst[k] = v end
-	if parent then inst.Parent = parent end
+	for k, v in pairs(props) do
+		inst[k] = v
+	end
+	if parent then
+		inst.Parent = parent
+	end
 	return inst
 end
 
@@ -53,371 +51,41 @@ local function Padding(l, r, t, b, parent)
 	}, parent)
 end
 
-local function IsPointer(input)
-	return input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch
-end
-
-local function OffsetPosition(pos, dy)
-	return UDim2.new(pos.X.Scale, pos.X.Offset, pos.Y.Scale + dy, pos.Y.Offset)
-end
-
-local function ToastSlot(index)
-	return UDim2.new(1, -14, 1, -14 - index * (TOAST_HEIGHT + TOAST_GAP))
-end
-
-local function AttachControls(window)
-	local hub = window._hub
-
-	function window:CreateToggle(title, desc, callback)
-		self._layoutOrder += 1
-		title = tostring(title or "Toggle")
-		local accent = hub._accentColor
-
-		local Row = NewInstance("Frame", {
-			Name             = title,
-			Size             = UDim2.new(1, 0, 0, 52),
-			BackgroundColor3 = Color3.fromRGB(10, 18, 14),
-			BorderSizePixel  = 0,
-			ZIndex           = 23,
-			LayoutOrder      = self._layoutOrder,
-		}, self._tabContent)
-		Corner(8, Row)
-		Stroke(accent, 1, 0.75, Row)
-
-		NewInstance("TextLabel", {
-			Position               = UDim2.new(0, 12, 0, 8),
-			Size                   = UDim2.new(1, -70, 0, 18),
-			BackgroundTransparency = 1,
-			Font                   = Enum.Font.GothamBold,
-			Text                   = title,
-			TextColor3             = Color3.fromRGB(220, 255, 240),
-			TextSize               = 13,
-			TextXAlignment         = Enum.TextXAlignment.Left,
-			RichText               = true,
-			ZIndex                 = 24,
-		}, Row)
-
-		NewInstance("TextLabel", {
-			Position               = UDim2.new(0, 12, 0, 28),
-			Size                   = UDim2.new(1, -70, 0, 16),
-			BackgroundTransparency = 1,
-			Font                   = Enum.Font.Gotham,
-			Text                   = desc or "",
-			TextColor3             = Color3.fromRGB(120, 180, 155),
-			TextSize               = 11,
-			TextXAlignment         = Enum.TextXAlignment.Left,
-			RichText               = true,
-			ZIndex                 = 24,
-			TextTruncate           = Enum.TextTruncate.AtEnd,
-		}, Row)
-
-		local ToggleTrack = NewInstance("Frame", {
-			AnchorPoint      = Vector2.new(1, 0.5),
-			Position         = UDim2.new(1, -12, 0.5, 0),
-			Size             = UDim2.fromOffset(42, 22),
-			BackgroundColor3 = Color3.fromRGB(20, 35, 28),
-			BorderSizePixel  = 0,
-			ZIndex           = 24,
-		}, Row)
-		Corner(11, ToggleTrack)
-
-		local ToggleThumb = NewInstance("Frame", {
-			AnchorPoint      = Vector2.new(0, 0.5),
-			Position         = UDim2.new(0, 3, 0.5, 0),
-			Size             = UDim2.fromOffset(16, 16),
-			BackgroundColor3 = Color3.fromRGB(80, 110, 95),
-			BorderSizePixel  = 0,
-			ZIndex           = 25,
-		}, ToggleTrack)
-		Corner(8, ToggleThumb)
-
-		local toggled = false
-
-		local function SetToggle(state, silent)
-			state   = state and true or false
-			toggled = state
-			Tween(ToggleTrack, 0.18, {
-				BackgroundColor3 = state and hub._accentColor or Color3.fromRGB(20, 35, 28),
-			})
-			Tween(ToggleThumb, 0.18, {
-				Position         = state and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
-				BackgroundColor3 = state and Color3.fromRGB(220, 255, 240) or Color3.fromRGB(80, 110, 95),
-			})
-			if not silent and callback then
-				task.spawn(callback, state)
-			end
-		end
-
-		local ClickOverlay = NewInstance("TextButton", {
-			Size                   = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			Text                   = "",
-			ZIndex                 = 26,
-		}, Row)
-		Corner(8, ClickOverlay)
-
-		ClickOverlay.MouseButton1Click:Connect(function()
-			SetToggle(not toggled)
-		end)
-		ClickOverlay.MouseEnter:Connect(function()
-			Tween(Row, 0.12, { BackgroundColor3 = Color3.fromRGB(14, 24, 19) })
-		end)
-		ClickOverlay.MouseLeave:Connect(function()
-			Tween(Row, 0.12, { BackgroundColor3 = Color3.fromRGB(10, 18, 14) })
-		end)
-
-		return {
-			Set = function(_, state) SetToggle(state, false) end,
-			Get = function(_) return toggled end,
-		}
-	end
-
-	window.CreateButton = window.CreateToggle
-
-	function window:CreateSlider(title, desc, minVal, maxVal, step, default, callback)
-		self._layoutOrder += 1
-		title  = tostring(title or "Slider")
-		minVal = minVal or 0
-		maxVal = maxVal or 100
-		step   = step   or 1
-
-		assert(type(minVal) == "number" and type(maxVal) == "number", "[SyntaxHub] CreateSlider: min and max must be numbers")
-		assert(type(step) == "number" and step > 0, "[SyntaxHub] CreateSlider: step must be a positive number, got " .. tostring(step))
-		assert(minVal < maxVal, "[SyntaxHub] CreateSlider: minVal must be less than maxVal")
-
-		default = math.clamp(default or minVal, minVal, maxVal)
-
-		local accent   = hub._accentColor
-		local scroller = self._scroll
-
-		local Row = NewInstance("Frame", {
-			Name             = title,
-			Size             = UDim2.new(1, 0, 0, 64),
-			BackgroundColor3 = Color3.fromRGB(10, 18, 14),
-			BorderSizePixel  = 0,
-			ZIndex           = 23,
-			LayoutOrder      = self._layoutOrder,
-		}, self._tabContent)
-		Corner(8, Row)
-		Stroke(accent, 1, 0.75, Row)
-
-		NewInstance("TextLabel", {
-			Position               = UDim2.new(0, 12, 0, 7),
-			Size                   = UDim2.new(1, -60, 0, 16),
-			BackgroundTransparency = 1,
-			Font                   = Enum.Font.GothamBold,
-			Text                   = title,
-			TextColor3             = Color3.fromRGB(220, 255, 240),
-			TextSize               = 13,
-			TextXAlignment         = Enum.TextXAlignment.Left,
-			RichText               = true,
-			ZIndex                 = 24,
-		}, Row)
-
-		NewInstance("TextLabel", {
-			Position               = UDim2.new(0, 12, 0, 25),
-			Size                   = UDim2.new(1, -70, 0, 14),
-			BackgroundTransparency = 1,
-			Font                   = Enum.Font.Gotham,
-			Text                   = desc or "",
-			TextColor3             = Color3.fromRGB(120, 180, 155),
-			TextSize               = 11,
-			TextXAlignment         = Enum.TextXAlignment.Left,
-			RichText               = true,
-			ZIndex                 = 24,
-			TextTruncate           = Enum.TextTruncate.AtEnd,
-		}, Row)
-
-		local ValueLabel = NewInstance("TextLabel", {
-			AnchorPoint            = Vector2.new(1, 0),
-			Position               = UDim2.new(1, -12, 0, 7),
-			Size                   = UDim2.fromOffset(44, 16),
-			BackgroundTransparency = 1,
-			Font                   = Enum.Font.GothamBold,
-			Text                   = tostring(default),
-			TextColor3             = accent,
-			TextSize               = 12,
-			TextXAlignment         = Enum.TextXAlignment.Right,
-			ZIndex                 = 24,
-		}, Row)
-
-		local Track = NewInstance("Frame", {
-			AnchorPoint      = Vector2.new(0, 1),
-			Position         = UDim2.new(0, 12, 1, -10),
-			Size             = UDim2.new(1, -24, 0, 4),
-			BackgroundColor3 = Color3.fromRGB(20, 35, 28),
-			BorderSizePixel  = 0,
-			ZIndex           = 24,
-		}, Row)
-		Corner(2, Track)
-
-		local Fill = NewInstance("Frame", {
-			Size             = UDim2.fromScale(0, 1),
-			BackgroundColor3 = accent,
-			BorderSizePixel  = 0,
-			ZIndex           = 25,
-		}, Track)
-		Corner(2, Fill)
-
-		local Dragger = NewInstance("Frame", {
-			AnchorPoint      = Vector2.new(0.5, 0.5),
-			Position         = UDim2.fromScale(0, 0.5),
-			Size             = UDim2.fromOffset(12, 12),
-			BackgroundColor3 = Color3.fromRGB(220, 255, 240),
-			BorderSizePixel  = 0,
-			ZIndex           = 26,
-		}, Track)
-		Corner(6, Dragger)
-
-		local Hit = NewInstance("Frame", {
-			AnchorPoint            = Vector2.new(0.5, 0.5),
-			Position               = UDim2.fromScale(0.5, 0.5),
-			Size                   = UDim2.new(1, 12, 0, 26),
-			BackgroundTransparency = 1,
-			BorderSizePixel        = 0,
-			ZIndex                 = 27,
-		}, Track)
-
-		local currentValue = default
-		local dragging     = false
-		local activeInput  = nil
-		local changedConn  = nil
-		local endedConn    = nil
-
-		local function Snap(v)
-			return math.clamp(
-				tonumber(string.format("%.10g", math.floor((v / step) + 0.5) * step)) or minVal,
-				minVal, maxVal
-			)
-		end
-
-		local function SetValue(v, silent, fromDrag)
-			local snapped = Snap(v)
-			local changed = snapped ~= currentValue
-			currentValue  = snapped
-
-			local pct = (snapped - minVal) / (maxVal - minVal)
-			if fromDrag then
-				Fill.Size        = UDim2.fromScale(pct, 1)
-				Dragger.Position = UDim2.new(pct, 0, 0.5, 0)
-			else
-				Tween(Fill,    0.08, { Size     = UDim2.fromScale(pct, 1) })
-				Tween(Dragger, 0.08, { Position = UDim2.new(pct, 0, 0.5, 0) })
-			end
-			ValueLabel.Text = tostring(snapped)
-
-			if not silent and callback and (changed or not fromDrag) then
-				task.spawn(callback, snapped)
-			end
-		end
-
-		SetValue(default, true, true)
-
-		local function UpdateFromX(x)
-			local width = math.max(Track.AbsoluteSize.X, 1)
-			local pct   = math.clamp((x - Track.AbsolutePosition.X) / width, 0, 1)
-			SetValue(minVal + (maxVal - minVal) * pct, false, true)
-		end
-
-		local function StopDrag()
-			if not dragging then return end
-			dragging    = false
-			activeInput = nil
-			hub._release(changedConn)
-			hub._release(endedConn)
-			changedConn = nil
-			endedConn   = nil
-			if scroller and scroller.Parent then
-				scroller.ScrollingEnabled = true
-			end
-		end
-
-		Hit.InputBegan:Connect(function(input)
-			if dragging or not IsPointer(input) then return end
-			dragging    = true
-			activeInput = input
-			if scroller then
-				scroller.ScrollingEnabled = false
-			end
-			UpdateFromX(input.Position.X)
-
-			changedConn = hub._track(UserInputService.InputChanged:Connect(function(i)
-				if not dragging then return end
-				if i == activeInput or i.UserInputType == Enum.UserInputType.MouseMovement then
-					UpdateFromX(i.Position.X)
-				end
-			end))
-
-			endedConn = hub._track(input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					StopDrag()
-				end
-			end))
-		end)
-
-		Row.Destroying:Connect(StopDrag)
-
-		return {
-			Set = function(_, v) SetValue(v, false, false) end,
-			Get = function(_) return currentValue end,
-		}
-	end
-end
-
-local SyntaxHub   = {}
+local SyntaxHub = {}
 SyntaxHub.__index = SyntaxHub
 
 function SyntaxHub.new(config)
 	config = config or {}
+
 	local credits      = config.Credits or {}
 	local featureMaker = tostring(credits.FeaturesMadeBy or "N/A")
-	local uiCreator    = tostring(credits.UICreator or "N/A")
+	local uiCreator    = tostring(credits.UICreator or "")
 
 	local creditLine = "UI by " .. uiCreator .. "  |  Features by " .. featureMaker
 
-	local logo  = config.CustomizeOpenLogo     or {}
+	local logo  = config.CustomizeOpenLogo or {}
 	local frame = config.CustomizeMainHubFrame or {}
 
 	local accentColor = Color3.fromRGB(logo.R or 0, logo.G or 170, logo.B or 127)
-	local hubName     = tostring(logo.Name or "Syntax Hub")
+	local hubName     = logo.Name or "Syntax Hub"
 	local hubImage    = logo.Image or "rbxassetid://85366189380329"
 
-	local hubSize = frame.Size                   or UDim2.fromOffset(480, 400)
-	local hubPos  = frame.Position               or UDim2.fromScale(0.5, 0.5)
-	local hubBg   = frame.BackgroundColor        or Color3.fromRGB(8, 14, 12)
+	local hubSize = frame.Size or UDim2.fromOffset(480, 400)
+	local hubPos  = frame.Position or UDim2.fromScale(0.5, 0.5)
+	local hubBg   = frame.BackgroundColor or Color3.fromRGB(8, 14, 12)
 	local hubBgTr = frame.BackgroundTransparency or 0
 
 	local draggable          = config.MakeDraggable ~= false
 	local settingsSelectable = config.SettingsWindowSelectable or false
 	local activateKeyName    = config.SettingsWindowActivateKey or nil
 
-	local guiName  = "SyntaxHub_" .. hubName
-	local existing = PlayerGui:FindFirstChild(guiName)
-	if existing then
-		existing:Destroy()
-	end
-
 	local ScreenGui = NewInstance("ScreenGui", {
-		Name           = guiName,
+		Name           = "SyntaxHub_" .. hubName,
 		ResetOnSpawn   = false,
 		DisplayOrder   = 9998,
 		IgnoreGuiInset = true,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 	}, PlayerGui)
-
-	local conns = {}
-
-	local function Track(conn)
-		conns[conn] = true
-		return conn
-	end
-
-	local function Release(conn)
-		if not conn then return end
-		conns[conn] = nil
-		conn:Disconnect()
-	end
 
 	local SideBtn = NewInstance("Frame", {
 		Name             = "SyntaxOpenBtn",
@@ -493,6 +161,7 @@ function SyntaxHub.new(config)
 		ZIndex           = 22,
 	}, HubFrame)
 	Corner(10, TitleBar)
+
 	NewInstance("Frame", {
 		Position         = UDim2.new(0, 0, 0.5, 0),
 		Size             = UDim2.new(1, 0, 0.5, 0),
@@ -592,7 +261,7 @@ function SyntaxHub.new(config)
 
 	local Dots = {}
 	for i = 1, 3 do
-		Dots[i] = NewInstance("TextLabel", {
+		local d = NewInstance("TextLabel", {
 			Name                   = tostring(i),
 			AnchorPoint            = Vector2.new(0.5, 0.5),
 			Position               = UDim2.new(0.5, (i - 2) * 22, 0.38, 0),
@@ -606,6 +275,7 @@ function SyntaxHub.new(config)
 			TextStrokeTransparency = 0.85,
 			ZIndex                 = 51,
 		}, LoadingOverlay)
+		Dots[i] = d
 	end
 
 	local LoadingMsgLabel = NewInstance("TextLabel", {
@@ -638,6 +308,21 @@ function SyntaxHub.new(config)
 		ZIndex                 = 51,
 	}, LoadingOverlay)
 
+	local dotConn
+	dotConn = RunService.RenderStepped:Connect(function()
+		if not LoadingOverlay or not LoadingOverlay.Parent then
+			dotConn:Disconnect()
+			return
+		end
+
+		if LoadingOverlay.Visible then
+			local t = os.clock()
+			for i, d in ipairs(Dots) do
+				d.TextTransparency = 0.15 + 0.85 * (0.5 + 0.5 * math.sin(t * 3 + i * 1.2))
+			end
+		end
+	end)
+
 	local SettingsFrame = NewInstance("Frame", {
 		Name                   = "SettingsFrame",
 		AnchorPoint            = Vector2.new(0.5, 0.5),
@@ -659,6 +344,7 @@ function SyntaxHub.new(config)
 		ZIndex           = 22,
 	}, SettingsFrame)
 	Corner(10, STitleBar)
+
 	NewInstance("Frame", {
 		Position         = UDim2.new(0, 0, 0.5, 0),
 		Size             = UDim2.new(1, 0, 0.5, 0),
@@ -666,6 +352,7 @@ function SyntaxHub.new(config)
 		BorderSizePixel  = 0,
 		ZIndex           = 22,
 	}, STitleBar)
+
 	NewInstance("TextLabel", {
 		AnchorPoint            = Vector2.new(0, 0.5),
 		Position               = UDim2.new(0, 12, 0.5, 0),
@@ -700,19 +387,13 @@ function SyntaxHub.new(config)
 	self._settingsFrame      = SettingsFrame
 	self._contentScroll      = ContentScroll
 	self._settingsScroll     = SettingsScroll
-	self._loadingOverlay     = LoadingOverlay
 	self._tabBar             = TabBar
 	self._accentColor        = accentColor
 	self._hubBg              = hubBg
-	self._bgTransparency     = hubBgTr
 	self._hubOpen            = false
 	self._settingsOpen       = false
-	self._loading            = false
-	self._destroyed          = false
 	self._tabs               = {}
-	self._toasts             = {}
 	self._activeTab          = nil
-	self._settingsWindow     = nil
 	self._uiCreator          = uiCreator
 	self._featureMaker       = featureMaker
 	self._creditLine         = creditLine
@@ -721,39 +402,19 @@ function SyntaxHub.new(config)
 	self._keyPopupShown      = false
 	self._loadingMessages    = {}
 	self._hasOpened          = false
-	self._track              = Track
-	self._release            = Release
+	self._connections        = {}
 
-	local restPos       = hubPos
-	local hubToken      = 0
-	local settingsToken = 0
-	local loadingToken  = 0
-	local dotsConn      = nil
-
-	local function StopDots()
-		if dotsConn then
-			Release(dotsConn)
-			dotsConn = nil
+	function self._track(conn)
+		if conn and typeof(conn) == "RBXScriptConnection" then
+			table.insert(self._connections, conn)
 		end
+		return conn
 	end
 
-	local function StartDots()
-		StopDots()
-		dotsConn = Track(RunService.RenderStepped:Connect(function()
-			local t = os.clock()
-			for i, d in ipairs(Dots) do
-				d.TextTransparency = 0.15 + 0.85 * (0.5 + 0.5 * math.sin(t * 3 + i * 1.2))
-			end
-		end))
-	end
-
-	local function CancelLoading()
-		if not self._loading then return end
-		loadingToken += 1
-		self._loading   = false
-		self._hasOpened = false
-		StopDots()
-		LoadingOverlay.Visible = false
+	function self._release(conn)
+		if conn and conn.Disconnect then
+			conn:Disconnect()
+		end
 	end
 
 	local function RunLoadingSequence(onDone)
@@ -762,27 +423,19 @@ function SyntaxHub.new(config)
 			return
 		end
 
-		loadingToken += 1
-		local myToken = loadingToken
-		self._loading = true
-
-		LoadingOverlay.Visible                = true
+		LoadingOverlay.Visible               = true
 		LoadingOverlay.BackgroundTransparency = 0.08
 		for _, d in ipairs(Dots) do
 			d.TextTransparency = 0
 		end
 		LoadingMsgLabel.TextTransparency = 0
 		LoadingSubLabel.TextTransparency = 0
-		StartDots()
 
 		local msgs = self._loadingMessages
 		local idx  = 1
 
 		local function ShowNext()
-			if loadingToken ~= myToken then return end
-
 			if idx > #msgs then
-				StopDots()
 				Tween(LoadingOverlay, 0.3, { BackgroundTransparency = 1 })
 				for _, d in ipairs(Dots) do
 					Tween(d, 0.3, { TextTransparency = 1 })
@@ -790,9 +443,7 @@ function SyntaxHub.new(config)
 				Tween(LoadingMsgLabel, 0.3, { TextTransparency = 1 })
 				Tween(LoadingSubLabel, 0.3, { TextTransparency = 1 })
 				task.delay(0.32, function()
-					if loadingToken ~= myToken then return end
 					LoadingOverlay.Visible = false
-					self._loading          = false
 					onDone()
 				end)
 				return
@@ -801,8 +452,8 @@ function SyntaxHub.new(config)
 			local m = msgs[idx]
 			idx += 1
 
-			LoadingMsgLabel.Text       = m.text  or ""
-			LoadingSubLabel.Text       = m.sub   or ""
+			LoadingMsgLabel.Text       = m.text or ""
+			LoadingSubLabel.Text       = m.sub or ""
 			LoadingMsgLabel.TextColor3 = m.color or Color3.fromRGB(200, 255, 235)
 
 			task.delay(m.duration or 0.85, ShowNext)
@@ -813,147 +464,137 @@ function SyntaxHub.new(config)
 
 	local function OpenHub()
 		self._hubOpen = true
-		hubToken += 1
-		HubFrame.Visible                = true
-		HubFrame.Position               = OffsetPosition(restPos, 0.04)
+		HubFrame.Visible = true
+		HubFrame.Position = UDim2.new(
+			hubPos.X.Scale, hubPos.X.Offset,
+			hubPos.Y.Scale + 0.04, hubPos.Y.Offset
+		)
 		HubFrame.BackgroundTransparency = 1
 		Tween(HubFrame, 0.28, {
-			Position               = restPos,
-			BackgroundTransparency = self._bgTransparency,
+			Position               = hubPos,
+			BackgroundTransparency = hubBgTr,
 		})
 	end
 
 	local function CloseHub()
-		CancelLoading()
 		self._hubOpen = false
-		hubToken += 1
-		local token = hubToken
 		Tween(HubFrame, 0.22, {
-			Position               = OffsetPosition(restPos, 0.05),
+			Position               = UDim2.new(hubPos.X.Scale, hubPos.X.Offset, hubPos.Y.Scale + 0.05, hubPos.Y.Offset),
 			BackgroundTransparency = 1,
 		})
 		task.delay(0.25, function()
-			if hubToken == token then
-				HubFrame.Visible = false
-			end
+			HubFrame.Visible = false
+			HubFrame.Position = hubPos
 		end)
-	end
-
-	local function OpenSettings()
-		self._settingsOpen = true
-		settingsToken += 1
-		SettingsFrame.Position               = restPos
-		SettingsFrame.Visible                = true
-		SettingsFrame.BackgroundTransparency = 1
-		Tween(SettingsFrame, 0.28, { BackgroundTransparency = self._bgTransparency })
-	end
-
-	local function CloseSettings()
-		self._settingsOpen = false
-		settingsToken += 1
-		local token = settingsToken
-		Tween(SettingsFrame, 0.22, { BackgroundTransparency = 1 })
-		task.delay(0.24, function()
-			if settingsToken == token then
-				SettingsFrame.Visible = false
-			end
-		end)
-	end
-
-	local function ShowHub()
-		if self._settingsOpen then
-			CloseSettings()
-		end
-		if not self._hasOpened and #self._loadingMessages > 0 then
-			self._hasOpened = true
-			hubToken += 1
-			HubFrame.Visible                = true
-			HubFrame.Position               = restPos
-			HubFrame.BackgroundTransparency = self._bgTransparency
-			RunLoadingSequence(OpenHub)
-		else
-			self._hasOpened = true
-			OpenHub()
-		end
 	end
 
 	SideBtnClick.MouseButton1Click:Connect(function()
-		if self._hubOpen or self._loading then
+		if self._hubOpen then
 			CloseHub()
 		else
-			ShowHub()
+			if self._settingsOpen then
+				Tween(SettingsFrame, 0.2, { BackgroundTransparency = 1 })
+				task.delay(0.22, function()
+					SettingsFrame.Visible = false
+					self._settingsOpen = false
+				end)
+			end
+
+			if not self._hasOpened and #self._loadingMessages > 0 then
+				self._hasOpened = true
+				HubFrame.Visible = true
+				HubFrame.Position = hubPos
+				HubFrame.BackgroundTransparency = hubBgTr
+				LoadingOverlay.Visible = true
+				RunLoadingSequence(function()
+					OpenHub()
+				end)
+			else
+				self._hasOpened = true
+				OpenHub()
+			end
 		end
 	end)
 
 	SideBtnClick.MouseEnter:Connect(function()
 		Tween(SideBtn, 0.15, { BackgroundColor3 = Color3.fromRGB(12, 22, 18) })
 	end)
+
 	SideBtnClick.MouseLeave:Connect(function()
 		Tween(SideBtn, 0.15, { BackgroundColor3 = Color3.fromRGB(8, 14, 12) })
 	end)
 
-	CloseBtn.MouseButton1Click:Connect(CloseHub)
+	CloseBtn.MouseButton1Click:Connect(function()
+		CloseHub()
+	end)
 
 	if draggable then
-		local function MakeDraggable(target, handle, other)
+		local function MakeDraggable(frame, handle)
+			local dragging, dragStart, startPos
 			handle.InputBegan:Connect(function(input)
-				if not IsPointer(input) then return end
-
-				local dragStart = input.Position
-				local startPos  = target.Position
-				local moveConn  = nil
-				local endConn   = nil
-
-				local function Stop()
-					Release(moveConn)
-					Release(endConn)
-					moveConn = nil
-					endConn  = nil
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch then
+					dragging  = true
+					dragStart = input.Position
+					startPos  = frame.Position
 				end
+			end)
 
-				moveConn = Track(UserInputService.InputChanged:Connect(function(i)
-					if i ~= input and i.UserInputType ~= Enum.UserInputType.MouseMovement then return end
-					local delta  = i.Position - dragStart
-					local newPos = UDim2.new(
+			handle.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1
+					or input.UserInputType == Enum.UserInputType.Touch then
+					dragging = false
+				end
+			end)
+
+			UserInputService.InputChanged:Connect(function(input)
+				if dragging and (
+					input.UserInputType == Enum.UserInputType.MouseMovement
+					or input.UserInputType == Enum.UserInputType.Touch
+				) then
+					local delta = input.Position - dragStart
+					frame.Position = UDim2.new(
 						startPos.X.Scale, startPos.X.Offset + delta.X,
 						startPos.Y.Scale, startPos.Y.Offset + delta.Y
 					)
-					target.Position = newPos
-					other.Position  = newPos
-					restPos         = newPos
-				end))
-
-				endConn = Track(input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						Stop()
-					end
-				end))
+				end
 			end)
 		end
-		MakeDraggable(HubFrame, TitleBar, SettingsFrame)
-		MakeDraggable(SettingsFrame, STitleBar, HubFrame)
+
+		MakeDraggable(HubFrame, TitleBar)
+		MakeDraggable(SettingsFrame, STitleBar)
 	end
 
 	if settingsSelectable and activateKeyName then
 		local keyOk, keyCode = pcall(function()
 			return Enum.KeyCode[activateKeyName]
 		end)
+
 		if keyOk and keyCode then
-			Track(UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			UserInputService.InputBegan:Connect(function(input, gameProcessed)
 				if gameProcessed then return end
 				if input.KeyCode ~= keyCode then return end
+
 				if self._settingsOpen then
-					CloseSettings()
-					ShowHub()
+					Tween(SettingsFrame, 0.22, { BackgroundTransparency = 1 })
+					task.delay(0.24, function()
+						SettingsFrame.Visible = false
+						self._settingsOpen = false
+					end)
+					OpenHub()
 				else
-					if self._hubOpen or self._loading then
+					if self._hubOpen then
 						CloseHub()
 					end
-					OpenSettings()
+
+					self._settingsOpen = true
+					SettingsFrame.Visible = true
+					SettingsFrame.BackgroundTransparency = 1
+					Tween(SettingsFrame, 0.28, { BackgroundTransparency = hubBgTr })
+
 					if not self._keyPopupShown then
 						self._keyPopupShown = true
 						task.delay(0.3, function()
-							if self._destroyed then return end
 							self:CreatePopup(
 								"Keybind Active",
 								"Press " .. activateKeyName .. " to toggle Settings / Hub"
@@ -961,48 +602,35 @@ function SyntaxHub.new(config)
 						end)
 					end
 				end
-			end))
+			end)
 		else
 			warn("[SyntaxHub] SettingsWindowActivateKey: invalid KeyCode '" .. tostring(activateKeyName) .. "'")
 		end
 	end
 
-	ScreenGui.Destroying:Connect(function()
-		self._destroyed = true
-		loadingToken  += 1
-		hubToken      += 1
-		settingsToken += 1
-		for conn in pairs(conns) do
-			conn:Disconnect()
-		end
-		table.clear(conns)
-	end)
-
 	return self
-end
-
-function SyntaxHub:Destroy()
-	if self._destroyed then return end
-	self._screenGui:Destroy()
 end
 
 function SyntaxHub:CreateLoadingMessage(text, sub, duration, color)
 	table.insert(self._loadingMessages, {
-		text     = text     or "Loading...",
-		sub      = sub      or "",
+		text     = text or "Loading...",
+		sub      = sub or "",
 		duration = duration or 0.85,
-		color    = color    or Color3.fromRGB(200, 255, 235),
+		color    = color or Color3.fromRGB(200, 255, 235),
 	})
 end
 
 function SyntaxHub:CustomizeLoadingMessage(index, props)
 	local m = self._loadingMessages[index]
 	if not m then return end
-	props = props or {}
 	if props.text     ~= nil then m.text     = props.text     end
 	if props.sub      ~= nil then m.sub      = props.sub      end
 	if props.duration ~= nil then m.duration = props.duration end
 	if props.color    ~= nil then m.color    = props.color    end
+end
+
+function SyntaxHub:CreateToggle(btnTitle, btnDesc, callback)
+	return self:CreateButton(btnTitle, btnDesc, callback)
 end
 
 function SyntaxHub:CreateWindow(title)
@@ -1021,6 +649,7 @@ function SyntaxHub:CreateWindow(title)
 		ZIndex           = 24,
 		LayoutOrder      = #self._tabs + 1,
 	}, self._tabBar)
+
 	Corner(6, TabBtn)
 
 	local TabContent = NewInstance("Frame", {
@@ -1039,7 +668,6 @@ function SyntaxHub:CreateWindow(title)
 		_hub         = self,
 		_tabBtn      = TabBtn,
 		_tabContent  = TabContent,
-		_scroll      = self._contentScroll,
 		_title       = title,
 		_layoutOrder = 0,
 	}
@@ -1054,7 +682,6 @@ function SyntaxHub:CreateWindow(title)
 	end
 
 	TabBtn.MouseButton1Click:Connect(function()
-		if self._activeTab == window then return end
 		if self._activeTab then
 			self._activeTab._tabContent.Visible = false
 			Tween(self._activeTab._tabBtn, 0.15, {
@@ -1062,59 +689,302 @@ function SyntaxHub:CreateWindow(title)
 				TextColor3       = self._accentColor,
 			})
 		end
+
 		TabContent.Visible = true
-		self._activeTab    = window
+		self._activeTab = window
+
 		Tween(TabBtn, 0.15, {
 			BackgroundColor3 = self._accentColor,
 			TextColor3       = Color3.fromRGB(6, 12, 10),
 		})
 	end)
 
-	AttachControls(window)
+	function window:CreateButton(btnTitle, btnDesc, callback)
+		self._layoutOrder += 1
+		local accent = self._hub._accentColor
+
+		local Row = NewInstance("Frame", {
+			Name             = btnTitle,
+			Size             = UDim2.new(1, 0, 0, 52),
+			BackgroundColor3 = Color3.fromRGB(10, 18, 14),
+			BorderSizePixel  = 0,
+			ZIndex           = 23,
+			LayoutOrder      = self._layoutOrder,
+		}, self._tabContent)
+		Corner(8, Row)
+		Stroke(accent, 1, 0.75, Row)
+
+		NewInstance("TextLabel", {
+			Position               = UDim2.new(0, 12, 0, 8),
+			Size                   = UDim2.new(1, -70, 0, 18),
+			BackgroundTransparency = 1,
+			Font                   = Enum.Font.GothamBold,
+			Text                   = btnTitle,
+			TextColor3             = Color3.fromRGB(220, 255, 240),
+			TextSize               = 13,
+			TextXAlignment         = Enum.TextXAlignment.Left,
+			RichText               = true,
+			ZIndex                 = 24,
+		}, Row)
+
+		NewInstance("TextLabel", {
+			Position               = UDim2.new(0, 12, 0, 28),
+			Size                   = UDim2.new(1, -70, 0, 16),
+			BackgroundTransparency = 1,
+			Font                   = Enum.Font.Gotham,
+			Text                   = btnDesc or "",
+			TextColor3             = Color3.fromRGB(120, 180, 155),
+			TextSize               = 11,
+			TextXAlignment         = Enum.TextXAlignment.Left,
+			RichText               = true,
+			ZIndex                 = 24,
+			TextTruncate           = Enum.TextTruncate.AtEnd,
+		}, Row)
+
+		local ToggleTrack = NewInstance("Frame", {
+			AnchorPoint      = Vector2.new(1, 0.5),
+			Position         = UDim2.new(1, -12, 0.5, 0),
+			Size             = UDim2.fromOffset(42, 22),
+			BackgroundColor3 = Color3.fromRGB(20, 35, 28),
+			BorderSizePixel  = 0,
+			ZIndex           = 24,
+		}, Row)
+		Corner(11, ToggleTrack)
+
+		local ToggleThumb = NewInstance("Frame", {
+			AnchorPoint      = Vector2.new(0, 0.5),
+			Position         = UDim2.new(0, 3, 0.5, 0),
+			Size             = UDim2.fromOffset(16, 16),
+			BackgroundColor3 = Color3.fromRGB(80, 110, 95),
+			BorderSizePixel  = 0,
+			ZIndex           = 25,
+		}, Row)
+		Corner(8, ToggleThumb)
+
+		local toggled = false
+		local debounce = false
+
+		local function SetToggle(state, silent)
+			toggled = state
+			Tween(ToggleTrack, 0.18, {
+				BackgroundColor3 = state and accent or Color3.fromRGB(20, 35, 28),
+			})
+			Tween(ToggleThumb, 0.18, {
+				Position         = state and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0),
+				BackgroundColor3 = state and Color3.fromRGB(220, 255, 240) or Color3.fromRGB(80, 110, 95),
+			})
+			if not silent and callback then
+				task.spawn(callback, state)
+			end
+		end
+
+		local ClickOverlay = NewInstance("TextButton", {
+			Size                   = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+			Text                   = "",
+			ZIndex                 = 26,
+		}, Row)
+		Corner(8, ClickOverlay)
+
+		ClickOverlay.MouseButton1Click:Connect(function()
+			if debounce then return end
+			debounce = true
+			task.delay(0.2, function()
+				debounce = false
+			end)
+			SetToggle(not toggled)
+		end)
+
+		ClickOverlay.MouseEnter:Connect(function()
+			Tween(Row, 0.12, { BackgroundColor3 = Color3.fromRGB(14, 24, 19) })
+		end)
+
+		ClickOverlay.MouseLeave:Connect(function()
+			Tween(Row, 0.12, { BackgroundColor3 = Color3.fromRGB(10, 18, 14) })
+		end)
+
+		return {
+			Set = function(_, state) SetToggle(state, false) end,
+			Get = function(_) return toggled end,
+		}
+	end
+
+	function window:CreateSlider(slTitle, slDesc, minVal, maxVal, step, default, callback)
+		self._layoutOrder += 1
+		local accent = self._hub._accentColor
+		minVal  = minVal or 0
+		maxVal  = maxVal or 100
+		step    = step or 1
+		default = math.clamp(default or minVal, minVal, maxVal)
+
+		local Row = NewInstance("Frame", {
+			Name             = slTitle,
+			Size             = UDim2.new(1, 0, 0, 64),
+			BackgroundColor3 = Color3.fromRGB(10, 18, 14),
+			BorderSizePixel  = 0,
+			ZIndex           = 23,
+			LayoutOrder      = self._layoutOrder,
+		}, self._tabContent)
+
+		Corner(8, Row)
+		Stroke(accent, 1, 0.75, Row)
+
+		NewInstance("TextLabel", {
+			Position               = UDim2.new(0, 12, 0, 7),
+			Size                   = UDim2.new(1, -60, 0, 16),
+			BackgroundTransparency = 1,
+			Font                   = Enum.Font.GothamBold,
+			Text                   = slTitle,
+			TextColor3             = Color3.fromRGB(220, 255, 240),
+			TextSize               = 13,
+			TextXAlignment         = Enum.TextXAlignment.Left,
+			RichText               = true,
+			ZIndex                 = 24,
+		}, Row)
+
+		NewInstance("TextLabel", {
+			Position               = UDim2.new(0, 12, 0, 25),
+			Size                   = UDim2.new(1, -70, 0, 14),
+			BackgroundTransparency = 1,
+			Font                   = Enum.Font.Gotham,
+			Text                   = slDesc or "",
+			TextColor3             = Color3.fromRGB(120, 180, 155),
+			TextSize               = 11,
+			TextXAlignment         = Enum.TextXAlignment.Left,
+			RichText               = true,
+			ZIndex                 = 24,
+			TextTruncate           = Enum.TextTruncate.AtEnd,
+		}, Row)
+
+		local ValueLabel = NewInstance("TextLabel", {
+			AnchorPoint            = Vector2.new(1, 0),
+			Position               = UDim2.new(1, -12, 0, 7),
+			Size                   = UDim2.fromOffset(44, 16),
+			BackgroundTransparency = 1,
+			Font                   = Enum.Font.GothamBold,
+			Text                   = tostring(default),
+			TextColor3             = accent,
+			TextSize               = 12,
+			TextXAlignment         = Enum.TextXAlignment.Right,
+			ZIndex                 = 24,
+		}, Row)
+
+		local Track = NewInstance("Frame", {
+			AnchorPoint      = Vector2.new(0, 1),
+			Position         = UDim2.new(0, 12, 1, -10),
+			Size             = UDim2.new(1, -24, 0, 4),
+			BackgroundColor3 = Color3.fromRGB(20, 35, 28),
+			BorderSizePixel  = 0,
+			ZIndex           = 24,
+		}, Row)
+		Corner(2, Track)
+
+		local Fill = NewInstance("Frame", {
+			Size             = UDim2.fromScale(0, 1),
+			BackgroundColor3 = accent,
+			BorderSizePixel  = 0,
+			ZIndex           = 25,
+		}, Track)
+		Corner(2, Fill)
+
+		local Dragger = NewInstance("Frame", {
+			AnchorPoint      = Vector2.new(0.5, 0.5),
+			Position         = UDim2.new(0, 0, 0.5, 0),
+			Size             = UDim2.fromOffset(12, 12),
+			BackgroundColor3 = Color3.fromRGB(220, 255, 240),
+			BorderSizePixel  = 0,
+			ZIndex           = 26,
+		}, Track)
+		Corner(6, Dragger)
+
+		local currentValue = default
+		local dragging = false
+
+		local function Snap(v)
+			return math.clamp(
+				tonumber(string.format("%.10g", math.floor((v / step) + 0.5) * step)),
+				minVal, maxVal
+			)
+		end
+
+		local function SetValue(v, silent)
+			currentValue = Snap(v)
+			local pct = (currentValue - minVal) / math.max(maxVal - minVal, 0.001)
+			Tween(Fill, 0.08, { Size = UDim2.fromScale(pct, 1) })
+			Tween(Dragger, 0.08, { Position = UDim2.new(pct, 0, 0.5, 0) })
+			ValueLabel.Text = tostring(currentValue)
+
+			if not silent and callback then
+				task.spawn(callback, currentValue)
+			end
+		end
+
+		SetValue(default, true)
+
+		local Mouse = LocalPlayer:GetMouse()
+
+		local DraggerBtn = NewInstance("TextButton", {
+			Size                   = UDim2.fromOffset(20, 20),
+			AnchorPoint            = Vector2.new(0.5, 0.5),
+			Position               = UDim2.fromScale(0.5, 0.5),
+			BackgroundTransparency = 1,
+			Text                   = "",
+			ZIndex                 = 27,
+		}, Dragger)
+
+		local mouseConn
+		local renderConn
+
+		DraggerBtn.MouseButton1Down:Connect(function()
+			dragging = true
+
+			renderConn = RunService.RenderStepped:Connect(function()
+				if not dragging then
+					if renderConn then
+						self._release(renderConn)
+						renderConn = nil
+					end
+					return
+				end
+
+				local pct = math.clamp(
+					(Mouse.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X,
+					0,
+					1
+				)
+
+				SetValue(minVal + (maxVal - minVal) * pct)
+			end)
+
+			mouseConn = UserInputService.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					dragging = false
+					if mouseConn then
+						self._release(mouseConn)
+						mouseConn = nil
+					end
+				end
+			end)
+		end)
+
+		return {
+			Set = function(_, v) SetValue(v, false) end,
+			Get = function(_) return currentValue end,
+		}
+	end
 
 	return window
 end
 
-function SyntaxHub:CreateSettingsWindow()
-	if self._settingsWindow then
-		return self._settingsWindow
-	end
-
-	local window = {
-		_hub         = self,
-		_tabContent  = self._settingsScroll,
-		_scroll      = self._settingsScroll,
-		_title       = "Settings",
-		_layoutOrder = 0,
-	}
-
-	AttachControls(window)
-	self._settingsWindow = window
-
-	return window
-end
-
-function SyntaxHub:_ReflowToasts()
-	for i, toast in ipairs(self._toasts) do
-		Tween(toast, 0.25, { Position = ToastSlot(i - 1) })
-	end
-end
-
-function SyntaxHub:CreatePopup(popTitle, popBody, duration)
-	local accent    = self._accentColor
+function SyntaxHub:CreatePopup(popTitle, popBody)
+	local accent = self._accentColor
 	local signature = self._uiCreator
-	local toasts    = self._toasts
-
-	if #toasts >= MAX_TOASTS then
-		local oldest = table.remove(toasts, 1)
-		oldest:Destroy()
-	end
 
 	local Toast = NewInstance("Frame", {
 		Name             = "SyntaxPopup",
 		AnchorPoint      = Vector2.new(1, 1),
-		Position         = UDim2.new(1, -14, 1, TOAST_HEIGHT + 20),
-		Size             = UDim2.fromOffset(260, TOAST_HEIGHT),
+		Position         = UDim2.new(1, -14, 1, 60),
+		Size             = UDim2.fromOffset(260, 68),
 		BackgroundColor3 = Color3.fromRGB(8, 14, 12),
 		BorderSizePixel  = 0,
 		ZIndex           = 9999,
@@ -1122,14 +992,14 @@ function SyntaxHub:CreatePopup(popTitle, popBody, duration)
 	Corner(8, Toast)
 	Stroke(accent, 1.5, 0.2, Toast)
 
-	local Bar = NewInstance("Frame", {
+	NewInstance("Frame", {
 		Size             = UDim2.new(0, 3, 1, -12),
 		Position         = UDim2.new(0, 6, 0, 6),
 		BackgroundColor3 = accent,
 		BorderSizePixel  = 0,
 		ZIndex           = 10000,
 	}, Toast)
-	Corner(2, Bar)
+	Corner(2, Toast:FindFirstChildOfClass("Frame"))
 
 	NewInstance("TextLabel", {
 		Position               = UDim2.new(0, 18, 0, 7),
@@ -1169,114 +1039,38 @@ function SyntaxHub:CreatePopup(popTitle, popBody, duration)
 		ZIndex                 = 10000,
 	}, Toast)
 
-	table.insert(toasts, Toast)
-	self:_ReflowToasts()
-
-	task.delay(duration or 5, function()
-		local idx = table.find(toasts, Toast)
-		if not idx then return end
-		table.remove(toasts, idx)
-		self:_ReflowToasts()
-		Tween(Toast, 0.35, {
-			Position = UDim2.new(1, 280, Toast.Position.Y.Scale, Toast.Position.Y.Offset),
-		})
+	Tween(Toast, 0.3, { Position = UDim2.new(1, -14, 1, -14) })
+	task.delay(5, function()
+		Tween(Toast, 0.35, { Position = UDim2.new(1, -14, 1, 80) })
 		task.delay(0.4, function()
 			Toast:Destroy()
 		end)
 	end)
 end
 
-function SyntaxHub:ApplyTheme(theme)
+function SyntaxHub:SettingsDeclared(theme)
 	theme = theme or {}
 
 	if theme.AccentColor then
-		local old = self._accentColor
-		local new = theme.AccentColor
-
-		if old ~= new then
-			for _, d in ipairs(self._screenGui:GetDescendants()) do
-				if d:IsA("UIStroke") then
-					if d.Color == old then
-						d.Color = new
-					end
-				elseif d:IsA("GuiObject") then
-					if d.BackgroundColor3 == old then
-						d.BackgroundColor3 = new
-					end
-					if d:IsA("TextLabel") or d:IsA("TextButton") then
-						if d.TextColor3 == old then
-							d.TextColor3 = new
-						end
-					elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
-						if d.ImageColor3 == old then
-							d.ImageColor3 = new
-						end
-					elseif d:IsA("ScrollingFrame") then
-						d.ScrollBarImageColor3 = new
-					end
-				end
+		local a = theme.AccentColor
+		self._accentColor = a
+		for _, d in ipairs(self._screenGui:GetDescendants()) do
+			if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("Frame") then
+				d.TextColor3 = a
 			end
-			self._accentColor = new
 		end
 	end
 
 	if theme.BackgroundColor then
-		local c = theme.BackgroundColor
-		self._hubBg = c
-		Tween(self._hubFrame,       0.3, { BackgroundColor3 = c })
-		Tween(self._settingsFrame,  0.3, { BackgroundColor3 = c })
-		Tween(self._loadingOverlay, 0.3, { BackgroundColor3 = c })
+		local bg = theme.BackgroundColor
+		self._hubBg = bg
+		self._hubFrame.BackgroundColor3 = bg
+		self._settingsFrame.BackgroundColor3 = bg
 	end
 
-	if theme.BackgroundImage then
-		local function ApplyBgImage(target)
-			local img = target:FindFirstChild("_BgImage") or NewInstance("ImageLabel", {
-				Name                   = "_BgImage",
-				Size                   = UDim2.fromScale(1, 1),
-				BackgroundTransparency = 1,
-				ZIndex                 = 19,
-			}, target)
-			img.Image             = theme.BackgroundImage
-			img.ImageTransparency = theme.BackgroundTransparency or 0.6
-		end
-		ApplyBgImage(self._hubFrame)
-		ApplyBgImage(self._settingsFrame)
-	elseif theme.BackgroundTransparency then
-		self._bgTransparency = theme.BackgroundTransparency
-		if self._hubOpen then
-			Tween(self._hubFrame, 0.3, { BackgroundTransparency = theme.BackgroundTransparency })
-		end
-		if self._settingsOpen then
-			Tween(self._settingsFrame, 0.3, { BackgroundTransparency = theme.BackgroundTransparency })
-		end
+	if theme.HubTitle then
+		self._hubFrame:FindFirstChild("TitleBar", true).TextLabel.Text = theme.HubTitle
 	end
-
-	if theme.FontStyle then
-		for _, d in ipairs(self._screenGui:GetDescendants()) do
-			if d:IsA("TextLabel") or d:IsA("TextButton") then
-				pcall(function() d.Font = theme.FontStyle end)
-			end
-		end
-	end
-
-	return {
-		SetAccent          = function(c) self:ApplyTheme({ AccentColor = c }) end,
-		SetBackground      = function(c) self:ApplyTheme({ BackgroundColor = c }) end,
-		SetBackgroundImage = function(img, tr) self:ApplyTheme({ BackgroundImage = img, BackgroundTransparency = tr }) end,
-		SetFont            = function(f) self:ApplyTheme({ FontStyle = f }) end,
-	}
-end
-
-function SyntaxHub:SettingsDeclared(theme)
-	if not warnedDeprecated then
-		warnedDeprecated = true
-		warn("[SyntaxHub] SettingsDeclared is deprecated and will be removed in a future version. Use ApplyTheme instead.")
-	end
-	return self:ApplyTheme(theme)
-end
-
-function SyntaxHub:GetSettingsScroll()
-	return self._settingsScroll
 end
 
 return SyntaxHub
