@@ -1,26 +1,3 @@
---[[
-    lynx.cc UI Library
-    Credits: Lyzps on Discord — lynx.cc on top!
-
-    Usage:
-        local LynxUI = loadstring(...)()
-        local Window = LynxUI:CreateWindow({ Title="...", ... })
-        local Tab    = Window:AddTab({ Title="...", Icon="..." })
-        local Sec    = Tab:AddSection("Section Name")
-        Sec:AddToggle("MyKey", { Title="...", Default=false, Callback=function(v) end })
-
-    Components:
-        Window      :AddTab, :Notify, :SetTheme, :Destroy
-        Tab         :AddSection
-        Section     :AddToggle, :AddSlider, :AddDropdown, :AddColorpicker,
-                    :AddKeybind, :AddButton, :AddInput, :AddParagraph
-        Toggle      :SetValue, :OnChanged
-        Slider      :SetValue, :OnChanged
-        Dropdown    :SetValue, :OnChanged
-        Colorpicker :SetValue, :OnChanged
-        Keybind     :SetValue, :OnChanged (value = true/false for Toggle mode, bool for Hold)
-        Input       :SetValue, :OnChanged
-]]
 
 local Players         = game:GetService("Players")
 local RunService      = game:GetService("RunService")
